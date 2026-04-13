@@ -19,18 +19,18 @@ def main():
     if len(sys.argv) > 1:
         topic = " ".join(sys.argv[1:])
     else:
-        topic = input("\n🔬 Enter your research topic: ").strip()
+        topic = input("\nEnter your research topic: ").strip()
         if not topic:
             print("Error: Please provide a topic.")
             sys.exit(1)
 
     print(f"\n{'='*60}")
-    print(f"  AI Research Agent System (Deep Agents)")
+    print(f"  Research Agent System")
     print(f"  Topic: {topic}")
     if tracing:
-        print(f"  LangSmith: ON")
+        print(f"  Tracing: ON")
     print(f"{'='*60}")
-    print("\n🚀 Starting deep agent pipeline...\n")
+    print("\nStarting pipeline...\n")
 
     agent = build_agent()
 
@@ -68,17 +68,17 @@ def main():
                         if name == "task":
                             agent_name = args.get("agent", args.get("name", "unknown"))
                             task_desc = args.get("description", "")[:80]
-                            print(f"  📋 Delegating to: {agent_name}")
+                            print(f"  [delegating] {agent_name}")
                             if task_desc:
                                 print(f"     → {task_desc}")
                         elif name == "write_todos":
-                            print(f"  📝 Planning...")
+                            print(f"  [planning]")
                         elif name == "web_search":
                             query = args.get("query", "")
-                            print(f"  🔍 Searching: {query}")
+                            print(f"  [searching] {query}")
                         elif name == "write_file":
                             path = args.get("path", "")
-                            print(f"  💾 Saving: {path}")
+                            print(f"  [saving] {path}")
 
                 # Capture final AI response
                 if hasattr(msg, "content") and msg.content and not getattr(msg, "tool_calls", None):
@@ -97,7 +97,7 @@ def main():
         with open(filename, "w") as f:
             f.write(f"# Research Report: {topic}\n\n")
             f.write(final_content)
-        print(f"\n📄 Report saved to: {filename}")
+        print(f"\nReport saved to: {filename}")
     else:
         print("No report generated. Check LangSmith for details.")
 

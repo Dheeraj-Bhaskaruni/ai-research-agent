@@ -1,63 +1,57 @@
-"""Streamlit frontend for the AI Research Agent System (Deep Agents)."""
+"""Streamlit frontend for the Research Agent System."""
 
 import os
 import streamlit as st
 from config import setup_langsmith, LANGSMITH_API_KEY, LANGSMITH_TRACING, LANGSMITH_PROJECT
 
-# Activate LangSmith
 tracing = setup_langsmith()
 
 from agent import build_agent
 
 st.set_page_config(
-    page_title="AI Research Agent (Deep Agents)",
-    page_icon="🔬",
+    page_title="Research Agent",
+    page_icon="",
     layout="wide",
 )
 
-st.title("🔬 AI Research Agent System")
-st.caption("Powered by Deep Agents + LangChain + LangGraph + LangSmith")
+st.title("Research Agent System")
+st.caption("Multi-agent research pipeline built with LangGraph")
 
 # Sidebar
 with st.sidebar:
-    st.header("Deep Agent Architecture")
+    st.header("Architecture")
     st.markdown("""
+    **Pipeline Flow:**
+
     ```
-    🧠 Orchestrator (Deep Agent)
-    │  Plans with write_todos
-    │  Delegates via task tool
-    │
-    ├── 🔍 Researcher (subagent)
-    │   Uses web_search, plans own work
-    │
-    ├── 🧠 Analyzer (subagent)
-    │   Extracts insights & patterns
-    │
-    ├── ✍️ Writer (subagent)
-    │   Produces polished report
-    │
-    └── 📋 Reviewer (subagent)
-        Scores & gives PASS/REVISE
-        → loops back to Writer if REVISE
+    Orchestrator (plans + delegates)
+    |
+    +-- Researcher (web search)
+    +-- Analyzer (insights)
+    +-- Writer (report)
+    +-- Reviewer (quality check)
+        |-- REVISE -> Writer
+        |-- PASS -> Done
     ```
 
-    **What makes it "deep":**
-    - Built-in task planning (todos)
-    - Subagent delegation (isolated context)
-    - File system access (persistent output)
-    - Auto context summarization
+    **Key Features:**
+    - Task planning at every level
+    - Subagent delegation with isolated context
+    - Live web search (DuckDuckGo)
+    - Automatic revision loop
+    - Full observability via LangSmith
     """)
 
     st.divider()
 
-    langsmith_status = "🟢 ON" if tracing else "🔴 OFF"
-    st.markdown(f"**LangSmith Tracing:** {langsmith_status}")
+    langsmith_status = "Active" if tracing else "Inactive"
+    st.markdown(f"**Tracing:** {langsmith_status}")
     if tracing:
         st.markdown(f"Project: `{LANGSMITH_PROJECT}`")
-        st.markdown("[Open LangSmith Dashboard →](https://smith.langchain.com)")
+        st.markdown("[Open Dashboard](https://smith.langchain.com)")
 
     st.divider()
-    st.markdown("**Tech Stack:** Deep Agents, LangChain, LangGraph, LangSmith, OpenAI, Streamlit")
+    st.markdown("**Stack:** Deep Agents, LangChain, LangGraph, LangSmith, OpenAI, Streamlit")
 
 # Main input
 topic = st.text_input(
@@ -65,11 +59,11 @@ topic = st.text_input(
     placeholder="e.g., The impact of AI agents on software development in 2025",
 )
 
-if st.button("🚀 Start Deep Research", type="primary", disabled=not topic):
+if st.button("Start Research", type="primary", disabled=not topic):
     agent = build_agent()
 
-    progress = st.progress(0, text="Starting deep agent pipeline...")
-    activity_log = st.expander("Agent Activity Log", expanded=True)
+    progress = st.progress(0, text="Starting pipeline...")
+    activity_log = st.expander("Activity Log", expanded=True)
     log_container = activity_log.empty()
     log_lines = []
 
@@ -77,7 +71,7 @@ if st.button("🚀 Start Deep Research", type="primary", disabled=not topic):
         log_lines.append(line)
         log_container.markdown("\n".join(log_lines))
 
-    add_log("🚀 **Pipeline started**")
+    add_log("**Pipeline started**")
 
     # Stream and collect final result
     step_count = 0
@@ -92,7 +86,7 @@ if st.button("🚀 Start Deep Research", type="primary", disabled=not topic):
             continue
 
         step_count += 1
-        progress.progress(min(step_count / total_steps, 0.95), text="Deep agent working...")
+        progress.progress(min(step_count / total_steps, 0.95), text="Working...")
 
         for node_name, node_data in event.items():
             if not isinstance(node_data, dict):
@@ -115,32 +109,32 @@ if st.button("🚀 Start Deep Research", type="primary", disabled=not topic):
                         args = tc.get("args", {})
                         if name == "task":
                             agent_name = args.get("agent", args.get("name", "unknown"))
-                            add_log(f"📋 **Delegating to:** `{agent_name}`")
+                            add_log(f"**Delegating to:** `{agent_name}`")
                         elif name == "write_todos":
-                            add_log("📝 **Planning tasks...**")
+                            add_log("**Planning tasks...**")
                         elif name == "web_search":
                             query = args.get("query", "")
-                            add_log(f"🔍 **Searching:** `{query}`")
+                            add_log(f"**Searching:** `{query}`")
                         elif name == "write_file":
                             path = args.get("path", "")
-                            add_log(f"💾 **Saving file:** `{path}`")
+                            add_log(f"**Saving:** `{path}`")
 
                 if hasattr(msg, "content") and msg.content and not getattr(msg, "tool_calls", None):
                     if len(msg.content) > 100:
                         final_content = msg.content
-                        add_log(f"✅ **{node_name}** completed")
+                        add_log(f"**{node_name}** completed")
 
-    progress.progress(1.0, text="Done!")
-    add_log("🎉 **Pipeline complete!**")
+    progress.progress(1.0, text="Done")
+    add_log("**Pipeline complete**")
 
     # Display final report
     st.divider()
-    st.subheader("📄 Final Report")
+    st.subheader("Final Report")
 
     if final_content:
         st.markdown(final_content)
         st.download_button(
-            label="📥 Download Report",
+            label="Download Report",
             data=final_content,
             file_name=f"{topic[:30].replace(' ', '_')}_report.md",
             mime="text/markdown",
